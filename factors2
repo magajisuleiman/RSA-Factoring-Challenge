@@ -1,0 +1,78 @@
+#!/usr/bin/python3
+import sys
+import math
+import random
+
+def gcd(a, b):
+    while b:
+        a, b = b, a % b
+    return a
+
+def pollard_rho(number):
+    if number % 2 == 0:
+        return 2
+
+    x = random.randint(1, number - 1)
+    y = x
+    c = random.randint(1, number - 1)
+    d = 1
+
+    def f(x):
+        return (x ** 2 + c) % number
+
+    while d == 1:
+        x = f(x)
+        y = f(f(y))
+        d = gcd(abs(x - y), number)
+
+    return d
+
+def factorize(number):
+    factors = []
+
+    while number > 1:
+        if is_prime(number):
+            factors.append(number)
+            break
+
+        divisor = pollard_rho(number)
+        factors.append(divisor)
+        number //= divisor
+
+    return factors
+
+def is_prime(number):
+    if number == 2 or number == 3:
+        return True
+    if number % 2 == 0 or number == 1:
+        return False
+    sqrt_num = int(math.sqrt(number)) + 1
+    for i in range(3, sqrt_num, 2):
+        if number % i == 0:
+            return False
+    return True
+
+if len(sys.argv) != 2:
+    print("Usage: factors <file>")
+    sys.exit(1)
+
+file_name = sys.argv[1]
+
+try:
+    with open(file_name, 'r') as file:
+        lines = file.readlines()
+        for line in lines:
+            number = int(line.strip())
+            factors = factorize(number)
+            if len(factors) > 1:
+                factor_str = ' * '.join(map(str, factors))
+                print(f"{number} = {factor_str}")
+            else:
+                print(f"The number {number} is a prime number")
+except FileNotFoundError:
+    print(f"Error: File '{file_name}' not found")
+    sys.exit(1)
+except ValueError:
+    print("Error: Invalid number in the file")
+    sys.exit(1)
+
